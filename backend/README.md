@@ -93,6 +93,26 @@ endpoint: 'https://script.google.com/macros/s/AKfycb.../exec',
 Listo. Para comprobarlo, abrir `https://tu-sitio/?i=GW-02` (2 lugares) y confirmar:
 la fila aparece en la pestaña `Confirmaciones` en 1 o 2 segundos.
 
+## Las columnas `enlace` y `mensaje` se generan solas
+
+En la hoja `Invitaciones` hay dos columnas calculadas (fórmulas, no texto):
+
+| Columna | Qué hace |
+|---|---|
+| **F · enlace** | Arma la URL completa con el código de esa fila: `https://sitio/?i=GW-02`. Si la fila está vacía, queda en blanco. |
+| **G · mensaje** | Arma el texto de WhatsApp con el nombre, la fecha, la dirección y **el cupo correcto** («Te reservamos 1 lugar» / «Les reservamos 2 lugares»). |
+
+Basta escribir `codigo`, `nombre` y `cupo` en A, B y C: F y G aparecen solas, al
+instante, hasta la fila 500. No hay que copiar URLs a mano (ahí es donde se
+cometen los errores).
+
+Para copiar el mensaje: clic en la celda de G y *Ctrl+C*; se pega en WhatsApp con
+sus saltos de línea.
+
+Si algún día cambia el dominio, se edita `CFG.SITIO` arriba del script y se
+ejecuta `sincronizarInvitados` una vez: las fórmulas se rehacen con la dirección
+nueva.
+
 ## Paso 5 · Cargar la lista real de invitados
 
 En la pestaña **Invitaciones**, una fila por invitación:

@@ -15,6 +15,10 @@ const CFG = {
   // Si el script está ligado a una hoja (Extensiones ▸ Apps Script) déjalo así.
   // Si es un script independiente, pon aquí el ID de la hoja:
   SHEET_ID: '',
+  // Dirección pública del sitio: con ella se arman los enlaces de cada fila.
+  // Si algún día ponen dominio propio, se cambia aquí y se pulsa
+  // Ejecutar ▸ sincronizarInvitados (las fórmulas se rehacen solas).
+  SITIO: 'https://metalsv.github.io/invitacion-guevara-wermuth/',
   // Filas mínimas entre el envío y la llegada del formulario (dificulta bots)
   MIN_SEGUNDOS: 2,
   // Avisos por correo: NO se usan a propósito. Para enterarte de cada
@@ -47,7 +51,9 @@ function hoja_(nombre) {
   if (!hoja) {
     hoja = libro.insertSheet(nombre);
     if (nombre === CFG.HOJA_INVITACIONES) {
-      hoja.appendRow(['codigo', 'nombre', 'cupo', 'telefono', 'notas']);
+      hoja.appendRow(['codigo', 'nombre', 'cupo', 'telefono', 'notas', 'enlace', 'mensaje']);
+      hoja.setColumnWidth(6, 430);
+      hoja.setColumnWidth(7, 430);
       hoja.getRange('A1:E1').setFontWeight('bold');
       hoja.setFrozenRows(1);
     } else {
@@ -251,6 +257,64 @@ function preparar() {
   Logger.log('Ejecutar como: yo · Quién tiene acceso: cualquier persona.');
 }
 
+/** ── Enlaces automáticos ─────────────────────────────────────────────
+ *  Escribe en la hoja dos columnas calculadas:
+ *    F  enlace   → la URL completa para el invitado (?i=CODIGO)
+ *    G  mensaje  → el texto listo para pegar en WhatsApp, con el cupo correcto
+ *  Son fórmulas, así que se actualizan solas en cuanto se escribe el código.
+ *  Se cubren 200 filas de más para que las invitaciones nuevas ya nazcan
+ *  con su enlace, sin tocar nada.
+ *  ──────────────────────────────────────────────────────────────────── */
+function instalarEnlaces_() {
+  const hoja = hoja_(CFG.HOJA_INVITACIONES);
+  const base = String(CFG.SITIO || '').replace(/\/?$/, '');   // sin barra final
+
+  // encabezados (no se pisan si ya están)
+  const enc = hoja.getRange(1, 1, 1, 7).getValues()[0];
+  if (String(enc[5] || '').trim().toLowerCase() !== 'enlace') {
+    hoja.getRange(1, 6).setValue('enlace').setFontWeight('bold');
+  }
+  if (String(enc[6] || '').trim().toLowerCase() !== 'mensaje') {
+    hoja.getRange(1, 7).setValue('mensaje').setFontWeight('bold');
+  }
+
+  // hasta dónde hay códigos escritos (no se usa getLastRow: las propias
+  // fórmulas lo inflarían y el rango crecería en cada ejecución)
+  const filas = Math.max(hoja.getLastRow(), 2) - 1;
+  const codigos = hoja.getRange(2, 1, filas, 1).getValues();
+  let ultimaConCodigo = 0;
+  codigos.forEach(function (f, i) { if (String(f[0] || '').trim()) ultimaConCodigo = i + 2; });
+  const hasta = Math.max(500, ultimaConCodigo + 50);
+  const valores = [];
+  for (let i = 2; i <= hasta; i++) {
+    valores.push([formulaEnlace_(i, base), formulaMensaje_(i)]);
+  }
+  const rango = hoja.getRange(2, 6, valores.length, 2);
+  rango.setFormulas(valores);
+  rango.setVerticalAlignment('top');
+  hoja.getRange(2, 7, valores.length, 1).setWrap(true);
+  hoja.setColumnWidth(6, 430);
+  hoja.setColumnWidth(7, 430);
+  hoja.setFrozenRows(1);
+  Logger.log('Enlaces listos en la columna F (mensaje en G) hasta la fila ' + hasta);
+}
+
+function formulaEnlace_(fila, base) {
+  // =SI(A2="";"";"https://sitio/?i=" & A2)
+  return '=IF($A' + fila + '="","","' + base + '/?i="&$A' + fila + ')';
+}
+
+function formulaMensaje_(fila) {
+  // Texto de WhatsApp: cambia según el cupo de la fila (columna C)
+  const saludo   = '"¡Hola "&$B' + fila + '&"!"';
+  const cuerpo   = '"Nos casamos el sábado 14 de noviembre a las 5:00 p.m. en Pampa el Volcán."';
+  const cupo     = 'IF($C' + fila + '=2,"Les reservamos 2 lugares.","Te reservamos 1 lugar.")';
+  const cierre   = '"Confirma aquí: "&$F' + fila + '&CHAR(10)&CHAR(10)&"¡Ojalá puedan acompañarnos!"';
+  return '=IF($A' + fila + '="","",' +
+         [saludo, 'CHAR(10)&CHAR(10)', cuerpo, 'CHAR(10)&CHAR(10)', cupo,
+          '" "&' + cierre].join('&') + ')';
+}
+
 /** Aplica la constante INVITADOS a la hoja "Invitaciones".
  *  Si el código ya existe, actualiza sus datos; si no, lo agrega.
  *  Se puede ejecutar cuantas veces se quiera: es idempotente. */
@@ -283,6 +347,7 @@ function sincronizarInvitados() {
       creadas++;
     }
   });
+  instalarEnlaces_();                 // deja la URL y el mensaje en cada fila
   Logger.log('Invitaciones: ' + creadas + ' nuevas, ' + actualizadas + ' actualizadas');
   return INVITADOS.length;
 }

@@ -24,7 +24,7 @@ const CODIGO = fs.readFileSync(path.join(RAIZ, 'backend', 'apps-script.gs'), 'ut
 
 /* ── Hoja de cálculo falsa ─────────────────────────────────────────── */
 class HojaFalsa {
-  constructor(nombre) { this.nombre = nombre; this.filas = []; }
+  constructor(nombre) { this.nombre = nombre; this.filas = []; this.formulas = {}; }
   appendRow(fila) { this.filas.push(fila.slice()); return this; }
   getLastRow() { return this.filas.length; }
   setFrozenRows() { return this; }
@@ -59,7 +59,15 @@ class HojaFalsa {
         return this;
       },
       setValue(x) { h.filas[fila - 1] = h.filas[fila - 1] || []; h.filas[fila - 1][col - 1] = x; return this; },
-      setFontWeight() { return this; }
+      setFontWeight() { return this; },
+      setWrap() { return this; },
+      setVerticalAlignment() { return this; },
+      setFormulas(vals) {
+        vals.forEach((v, i) => v.forEach((x, j) => {
+          h.formulas[(fila + i) + ':' + (col + j)] = x;
+        }));
+        return this;
+      }
     };
   }
 }
@@ -117,6 +125,17 @@ console.log('\n2) sincronizarInvitados() es idempotente');
 contexto.sincronizarInvitados();
 contexto.sincronizarInvitados();
 ok(inv.filas.length === 4, 'sigue habiendo 3 invitados (no duplica)', `${inv.filas.length} filas`);
+
+console.log('\n2b) enlaces automáticos en la hoja');
+const fUrl = libro.hojas['Invitaciones'].formulas['2:6'] || '';
+const fMsg = libro.hojas['Invitaciones'].formulas['2:7'] || '';
+ok(fUrl.includes('https://metalsv.github.io/invitacion-guevara-wermuth/') && fUrl.includes('&$A2'),
+   'la columna enlace arma la URL del código', fUrl.slice(0, 90));
+ok(fMsg.includes('IF($C2=2') && fMsg.includes('2 lugares') && fMsg.includes('1 lugar'),
+   'el mensaje cambia según el cupo', fMsg.slice(0, 70) + '…');
+ok(Object.keys(libro.hojas['Invitaciones'].formulas).length >= 900,
+   'cubre 500 filas (para invitaciones nuevas)',
+   Object.keys(libro.hojas['Invitaciones'].formulas).length + ' celdas con fórmula');
 
 console.log('\n3) doGet');
 const g1 = get('GW-01'), g2 = get('GW-02');
