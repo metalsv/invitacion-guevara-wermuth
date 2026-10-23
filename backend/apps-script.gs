@@ -308,6 +308,18 @@ function prepararConfig_() {
   return hoja;
 }
 
+/** Vacía sólo la hoja Confirmaciones (deja la lista de invitados intacta).
+ *  Útil para borrar pruebas antes de repartir los enlaces. */
+function limpiarRespuestas() {
+  const resp = hoja_(CFG.HOJA_RESPUESTAS);
+  const ultima = resp.getLastRow();
+  const borradas = Math.max(ultima - 1, 0);
+  if (borradas > 0) resp.deleteRows(2, borradas);
+  actualizarResumen_();
+  Logger.log('Confirmaciones vaciada: ' + borradas + ' respuesta(s) eliminada(s).');
+  return borradas;
+}
+
 /** ── Empezar de cero (antes de repartir los enlaces) ──────────────────
  *  Vacía la lista de invitados y las respuestas, deja las hojas limpias con
  *  sus encabezados, conserva la pestaña Config y vuelve a cargar la lista

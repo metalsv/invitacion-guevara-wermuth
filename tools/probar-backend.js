@@ -161,6 +161,15 @@ ok(String(celda(2, 6)) === 'https://otro-dominio.test/?i=GW-01',
 cfg.filas[1] = ['sitio', 'https://boda-guevara-wermuth.artechstudio.net'];
 contexto.rehacerEnlaces();
 
+console.log('\n2e2) limpiarRespuestas deja la lista intacta');
+post({ code: 'GW-02', nombre: 'Prueba Dos', asiste: 'si', ts: Date.now() - 5000 });
+const antesInv = libro.hojas['Invitaciones'].filas.length;
+const borradas = contexto.limpiarRespuestas();
+ok(borradas >= 1, 'borra las respuestas', 'borradas=' + borradas);
+ok(libro.hojas['Confirmaciones'].filas.length === 1, 'Confirmaciones sólo con encabezado');
+ok(libro.hojas['Invitaciones'].filas.length === antesInv, 'no toca la lista de invitados',
+   antesInv + ' filas');
+
 console.log('\n2f) empezar de cero');
 post({ code: 'GW-01', nombre: 'Alguien Real', asiste: 'si', ts: Date.now() - 5000 });
 libro.hojas['Invitaciones'].filas.push(['BASURA-1', 'Fila de prueba', 1, '', '']);
