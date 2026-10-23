@@ -103,6 +103,7 @@ function doGet(e) {
 
     let invitacion = null;
     for (const fila of datos) {
+      if (!fila || fila[iCod] === undefined) continue;      // fila vacía
       if (String(fila[iCod]).trim().toUpperCase() === codigo.toUpperCase()) {
         invitacion = {
           nombre: String(fila[iNom] || ''),
@@ -120,6 +121,7 @@ function doGet(e) {
     const rAsi = encR.indexOf('asiste');
     let confirmado = false;
     for (const fila of resp) {
+      if (!fila || fila[rCod] === undefined) continue;      // fila vacía
       if (String(fila[rCod]).trim().toUpperCase() === codigo.toUpperCase() &&
           String(fila[rAsi]) === 'si') { confirmado = true; }
     }
@@ -129,6 +131,7 @@ function doGet(e) {
       cupo: invitacion.cupo, confirmado: confirmado
     });
   } catch (err) {
+    Logger.log(err.stack || String(err));
     return json_({ ok: false, error: String(err) });
   }
 }
@@ -260,62 +263,82 @@ function preparar() {
 /** ── Enlaces automáticos ─────────────────────────────────────────────
  *  Escribe en la hoja dos columnas calculadas:
  *    F  enlace   → la URL completa para el invitado (?i=CODIGO)
- *    G  mensaje  → el texto listo para pegar en WhatsApp, con el cupo correcto
- *  Son fórmulas, así que se actualizan solas en cuanto se escribe el código.
- *  Se cubren unas 25 filas de más para que las invitaciones nuevas ya
- *  nazcan con su enlace; si se agregan más, basta ejecutar de nuevo
- *  sincronizarInvitados (el rango se recalcula solo).
+ *    G  mensaje  → texto listo para pegar en WhatsApp, con el cupo correcto
+ *
+ *  Se escriben como VALORES (no fórmulas) y se recalculan solas con onEdit:
+ *  en cuanto alguien escribe o corrige el código, el nombre o el cupo en
+ *  A, B o C, las columnas F y G se actualizan. Así funciona igual con la
+ *  hoja en español, en inglés o en cualquier idioma (las fórmulas en inglés
+ *  dan #ERROR! en una hoja en español).
  *  ──────────────────────────────────────────────────────────────────── */
-function instalarEnlaces_() {
+
+/** onEdit: se dispara al editar la hoja. Mantiene F y G al día. */
+function onEdit(e) {
+  try {
+    if (!e || !e.range) return;
+    const hoja = e.range.getSheet();
+    if (hoja.getName() !== CFG.HOJA_INVITACIONES) return;
+    const primera = e.range.getRow();
+    const cuantas = e.range.getNumRows();
+    if (e.range.getColumn() > 3) return;          // sólo A, B o C
+    for (let i = 0; i < cuantas; i++) {
+      const fila = primera + i;
+      if (fila >= 2) actualizarFila_(hoja, fila);
+    }
+  } catch (err) {
+    Logger.log('onEdit: ' + (err.stack || err));
+  }
+}
+
+/** Recalcula el enlace y el mensaje de una fila concreta. */
+function actualizarFila_(hoja, fila) {
+  const v = hoja.getRange(fila, 1, 1, 3).getValues()[0];
+  const codigo = String(v[0] || '').trim();
+  const nombre = String(v[1] || '').trim();
+  const cupo = Number(v[2] || 1) === 2 ? 2 : 1;
+
+  if (!codigo) {
+    hoja.getRange(fila, 6, 1, 2).setValues([['', '']]);
+    return;
+  }
+  hoja.getRange(fila, 6).setValue(enlaceDe_(codigo));
+  hoja.getRange(fila, 7).setValue(nombre ? mensajeDe_(codigo, nombre, cupo) : '');
+}
+
+/** Recorre todas las filas con código: un solo clic deja todo listo. */
+function rehacerEnlaces() {
   const hoja = hoja_(CFG.HOJA_INVITACIONES);
-  const base = String(CFG.SITIO || '').replace(/\/?$/, '');   // sin barra final
-
-  // encabezados (no se pisan si ya están)
-  const enc = hoja.getRange(1, 1, 1, 7).getValues()[0];
-  if (String(enc[5] || '').trim().toLowerCase() !== 'enlace') {
-    hoja.getRange(1, 6).setValue('enlace').setFontWeight('bold');
+  const ultima = hoja.getLastRow();
+  let n = 0;
+  for (let fila = 2; fila <= ultima; fila++) {
+    const codigo = String(hoja.getRange(fila, 1).getValue() || '').trim();
+    if (!codigo) continue;
+    actualizarFila_(hoja, fila);
+    n++;
   }
-  if (String(enc[6] || '').trim().toLowerCase() !== 'mensaje') {
-    hoja.getRange(1, 7).setValue('mensaje').setFontWeight('bold');
-  }
-
-  // hasta dónde hay códigos escritos (no se usa getLastRow: las propias
-  // fórmulas lo inflarían y el rango crecería en cada ejecución)
-  const filas = Math.max(hoja.getLastRow(), 2) - 1;
-  const codigos = hoja.getRange(2, 1, filas, 1).getValues();
-  let ultimaConCodigo = 0;
-  codigos.forEach(function (f, i) { if (String(f[0] || '').trim()) ultimaConCodigo = i + 2; });
-  // sólo lo que hay + un margen cómodo: la hoja se mantiene corta
-  const hasta = Math.max(30, ultimaConCodigo + 25);
-  const valores = [];
-  for (let i = 2; i <= hasta; i++) {
-    valores.push([formulaEnlace_(i, base), formulaMensaje_(i)]);
-  }
-  const rango = hoja.getRange(2, 6, valores.length, 2);
-  rango.setFormulas(valores);
-  rango.setVerticalAlignment('top');
-  hoja.getRange(2, 7, valores.length, 1).setWrap(true);
+  hoja.getRange(1, 6).setValue('enlace').setFontWeight('bold');
+  hoja.getRange(1, 7).setValue('mensaje').setFontWeight('bold');
+  hoja.getRange('F2:F').setVerticalAlignment('top');
+  hoja.getRange('G2:G').setWrap(true);     // toda la columna, también las filas futuras
   hoja.setColumnWidth(6, 430);
   hoja.setColumnWidth(7, 430);
   hoja.setFrozenRows(1);
-  Logger.log('Enlaces listos en la columna F (mensaje en G) hasta la fila ' + hasta +
-             ' — margen para 25 invitaciones nuevas');
+  Logger.log('Enlaces actualizados en ' + n + ' invitación(es).');
+  return n;
 }
 
-function formulaEnlace_(fila, base) {
-  // =SI(A2="";"";"https://sitio/?i=" & A2)
-  return '=IF($A' + fila + '="","","' + base + '/?i="&$A' + fila + ')';
+function enlaceDe_(codigo) {
+  const base = String(CFG.SITIO || '').replace(/\/?$/, '');
+  return base + '/?i=' + encodeURIComponent(codigo);
 }
 
-function formulaMensaje_(fila) {
-  // Texto de WhatsApp: cambia según el cupo de la fila (columna C)
-  const saludo   = '"¡Hola "&$B' + fila + '&"!"';
-  const cuerpo   = '"Nos casamos el sábado 14 de noviembre a las 5:00 p.m. en Pampa el Volcán."';
-  const cupo     = 'IF($C' + fila + '=2,"Les reservamos 2 lugares.","Te reservamos 1 lugar.")';
-  const cierre   = '"Confirma aquí: "&$F' + fila + '&CHAR(10)&CHAR(10)&"¡Ojalá puedan acompañarnos!"';
-  return '=IF($A' + fila + '="","",' +
-         [saludo, 'CHAR(10)&CHAR(10)', cuerpo, 'CHAR(10)&CHAR(10)', cupo,
-          '" "&' + cierre].join('&') + ')';
+function mensajeDe_(codigo, nombre, cupo) {
+  const lugar = cupo === 2 ? 'Les reservamos 2 lugares.' : 'Te reservamos 1 lugar.';
+  return '¡Hola ' + nombre + '!' + '\n\n' +
+         'Nos casamos el sábado 14 de noviembre a las 5:00 p.m. en Pampa el Volcán.' + '\n\n' +
+         lugar + ' Confirma aquí:' + '\n' +
+         enlaceDe_(codigo) + '\n\n' +
+         '¡Ojalá puedan acompañarnos!';
 }
 
 /** Aplica la constante INVITADOS a la hoja "Invitaciones".
@@ -350,7 +373,7 @@ function sincronizarInvitados() {
       creadas++;
     }
   });
-  instalarEnlaces_();                 // deja la URL y el mensaje en cada fila
+  rehacerEnlaces();                   // deja la URL y el mensaje en cada fila
   Logger.log('Invitaciones: ' + creadas + ' nuevas, ' + actualizadas + ' actualizadas');
   return INVITADOS.length;
 }

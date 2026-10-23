@@ -25,6 +25,7 @@ const CODIGO = fs.readFileSync(path.join(RAIZ, 'backend', 'apps-script.gs'), 'ut
 /* ── Hoja de cálculo falsa ─────────────────────────────────────────── */
 class HojaFalsa {
   constructor(nombre) { this.nombre = nombre; this.filas = []; this.formulas = {}; }
+  getName() { return this.nombre; }
   appendRow(fila) { this.filas.push(fila.slice()); return this; }
   getLastRow() { return this.filas.length; }
   setFrozenRows() { return this; }
@@ -126,18 +127,28 @@ contexto.sincronizarInvitados();
 contexto.sincronizarInvitados();
 ok(inv.filas.length === 4, 'sigue habiendo 3 invitados (no duplica)', `${inv.filas.length} filas`);
 
-console.log('\n2b) enlaces automáticos en la hoja');
-const fUrl = libro.hojas['Invitaciones'].formulas['2:6'] || '';
-const fMsg = libro.hojas['Invitaciones'].formulas['2:7'] || '';
-ok(fUrl.includes('https://metalsv.github.io/invitacion-guevara-wermuth/') && fUrl.includes('&$A2'),
-   'la columna enlace arma la URL del código', fUrl.slice(0, 90));
-ok(fMsg.includes('IF($C2=2') && fMsg.includes('2 lugares') && fMsg.includes('1 lugar'),
-   'el mensaje cambia según el cupo', fMsg.slice(0, 70) + '…');
-const celdas = Object.keys(libro.hojas['Invitaciones'].formulas).length;
-ok(celdas === 58, 'cubre 3 filas de datos + 25 de margen (29 filas × 2 columnas)',
-   celdas + ' celdas con fórmula');
-ok((libro.hojas['Invitaciones'].formulas['30:6'] || '').includes('&$A30'),
-   'la última fila del margen apunta a su propia fila');
+console.log('\n2b) enlaces y mensajes calculados (sin fórmulas)');
+const inv2 = libro.hojas['Invitaciones'];
+const celda = (f, c) => (inv2.filas[f - 1] || [])[c - 1] || '';
+ok(String(celda(2, 6)).includes('https://metalsv.github.io/invitacion-guevara-wermuth/?i=GW-01'),
+   'F2 tiene la URL de GW-01', String(celda(2, 6)));
+ok(String(celda(3, 7)).includes('¡Hola Familia Guevara!'), 'G3 saluda por su nombre');
+ok(String(celda(3, 7)).includes('Les reservamos 2 lugares'), 'G3 dice «2 lugares» para cupo 2');
+ok(String(celda(2, 7)).includes('Te reservamos 1 lugar'), 'G2 dice «1 lugar» para cupo 1');
+ok(!/^=/.test(String(celda(2, 6))), 'no son fórmulas (no pueden dar #ERROR! en hoja en español)');
+
+console.log('\n2c) al escribir una invitación nueva, aparece el enlace');
+// simula escribir A6, B6, C6 y el onEdit que dispara Google
+inv2.filas[5] = ['GUEVARA-A-2', 'Primos Guevara', 2, '', ''];
+contexto.onEdit({ range: { getSheet: () => inv2, getRow: () => 6, getNumRows: () => 1, getColumn: () => 1 } });
+ok(String(celda(6, 6)) === 'https://metalsv.github.io/invitacion-guevara-wermuth/?i=GUEVARA-A-2',
+   'F6 se llenó solo', String(celda(6, 6)));
+ok(String(celda(6, 7)).includes('Les reservamos 2 lugares'), 'G6 con el cupo correcto');
+
+console.log('\n2d) al borrar el código se limpia todo');
+inv2.filas[5] = ['', '', '', '', ''];
+contexto.onEdit({ range: { getSheet: () => inv2, getRow: () => 6, getNumRows: () => 1, getColumn: () => 1 } });
+ok(celda(6, 6) === '' && celda(6, 7) === '', 'F6 y G6 quedaron vacías');
 
 console.log('\n3) doGet');
 const g1 = get('GW-01'), g2 = get('GW-02');
