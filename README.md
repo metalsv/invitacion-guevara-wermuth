@@ -1,4 +1,25 @@
-# Invitación digital — Guevara & Wermuth
+# Invitación de boda · Guevara & Wermuth
+
+**Sitio en producción:** https://boda-guevara-wermuth.artechstudio.net
+
+| | |
+|---|---|
+| Fecha del evento | sábado 14 de noviembre de 2026, 5:00 p.m. |
+| Lugar | Pampa el Volcán, El Salvador |
+| Invitaciones | un enlace por invitación, con 1 o 2 lugares reservados |
+| Respuestas | pestaña `Confirmaciones` de la hoja de Google |
+
+### Estado (23 de octubre de 2026)
+
+- ✅ Diseño, formulario y publicación funcionando.
+- ✅ Dominio propio con HTTPS y certificado válido.
+- ✅ Backend en Google Sheets probado de extremo a extremo.
+- 🕓 **Entregado al cliente para su revisión.**
+- ⏳ Pendiente: lista real de invitados y pegar la versión final del
+  `apps-script.gs` en la hoja (trae `Config`, `empezarDeCero` y el dominio nuevo).
+
+---
+
 
 Invitación web con confirmación de asistencia, hecha a partir del diseño original:
 mismo fondo verde petróleo, misma caligrafía, mismo marco y las **mismas flores del
