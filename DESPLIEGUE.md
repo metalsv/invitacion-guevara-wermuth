@@ -1,7 +1,30 @@
-# Publicar el sitio
+# Despliegue
 
-Son archivos estáticos (HTML, CSS, JS, fuentes, imágenes). No necesita Node ni base de
-datos en el servidor. Tres caminos, del más rápido al más controlado.
+## Estado actual: publicado en GitHub Pages
+
+| | |
+|---|---|
+| **Sitio** | https://metalsv.github.io/invitacion-guevara-wermuth/ |
+| **Repositorio** | https://github.com/metalsv/invitacion-guevara-wermuth (público) |
+| **Rama publicada** | `main`, carpeta raíz (`/`) |
+| **HTTPS** | automático, certificado válido |
+| **Actualizar** | `git add -A && git commit -m "..." && git push` → repubica en ~40 s |
+
+Para ver el diseño de una invitación de 2 lugares sin backend: `?l=2`.
+Con `?i=GW-02` funciona de verdad sólo cuando `assets/js/config.js` tenga el
+`endpoint` del Apps Script; mientras tanto la página avisa que no pudo verificar
+los lugares y usa el cupo mínimo (1).
+
+**Pendiente para que las confirmaciones se guarden:** crear la hoja de Google y
+publicar el Apps Script (ver `backend/README.md`), pegar la URL `/exec` en
+`assets/js/config.js` y hacer `git push`. Son 2 minutos.
+
+---
+
+## Otras opciones (por si algún día cambia)
+
+Son archivos estáticos (HTML, CSS, JS, fuentes, imágenes). No necesitan Node ni base
+de datos en el servidor.
 
 ---
 
