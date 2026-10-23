@@ -12,7 +12,7 @@ window.BODA_CONFIG = {
    * WhatsApp/correo para que la confirmación no se pierda.
    * Ver backend/README.md para publicarlo en 5 minutos.
    */
-  endpoint: '',
+  endpoint: 'https://script.google.com/macros/s/AKfycbxy4JlWmBp0uQOsfxW0q6WrFQBYH2eareJnuEdQTjWgKKelNI89CGVNBPAIa6UT6m_0Ww/exec',
 
   /* Respaldo cuando no hay endpoint configurado */
   whatsapp: '', // ej. '50370000000' (código de país + número, sin +)
