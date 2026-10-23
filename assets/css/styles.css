@@ -1,0 +1,626 @@
+/* ══════════════════════════════════════════════════════════════════
+   Guevara & Wermuth — invitación digital con confirmación de asistencia
+   Line gráfica extraída de la invitación original (verde petróleo,
+   crema, caligrafía + serif, ornamento floral en esquinas).
+   ══════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Great Vibes';
+  src: url('../fonts/great-vibes-latin.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('../fonts/ebgaramond-latin.woff2') format('woff2');
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+:root {
+  /* Paleta muestreada de la imagen original */
+  --bg-deep: #061d26;
+  --bg-mid: #0b2c35;
+  --bg-hi: #133840;
+  --bg-grad: radial-gradient(95% 88% at 80% 40%, #0e2f38 0%, var(--bg-mid) 38%, #0a2731 58%, #07202a 86%, #061c25 100%);
+  --ink: #f2ecdf;
+  --ink-soft: rgba(242, 236, 223, .72);
+  --ink-dim: rgba(242, 236, 223, .45);
+  --line: rgba(226, 218, 201, .8);
+  --line-soft: rgba(226, 218, 201, .22);
+  --danger: #e7b3a3;
+
+  --serif: 'EB Garamond', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --script: 'Great Vibes', 'Segoe Script', cursive;
+
+  --radius: 2px;
+  --wrap: 560px;
+  /* Tope de ancho de la invitación en desktop. El tamaño real se calcula
+     por la altura de la ventana (2/3 del alto, mínimo 600 px), así que en
+     un monitor grande llega a ~680 y en un portátil se queda en 600. */
+  --card-max: 760px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+/* el atributo hidden debe ganarle a cualquier display de las clases */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--ink);
+  background-image:
+    radial-gradient(150% 110% at 50% -10%, #0a232b 0%, #051a21 55%, #03121a 100%);
+  background-color: #03121a;
+  background-attachment: fixed;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* ── Accesibilidad base ───────────────────────────────────────────── */
+.skip-link {
+  position: absolute; left: 12px; top: -48px;
+  z-index: 20; padding: 10px 16px;
+  background: var(--ink); color: #08222b;
+  border-radius: var(--radius); font-size: 14px; text-decoration: none;
+  transition: top .18s ease;
+}
+.skip-link:focus-visible { top: 12px; }
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ══════════════════════ HERO / TARJETA ══════════════════════ */
+.hero {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: clamp(14px, 3vw, 40px) clamp(12px, 3vw, 32px) clamp(20px, 4vw, 34px);
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: var(--wrap);
+  aspect-ratio: 1024 / 1536;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 1px;
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, .2),
+    0 24px 60px -28px rgba(0, 0, 0, .75);
+  isolation: isolate;
+  background-image: var(--bg-grad);
+  background-color: var(--bg-deep);
+}
+
+.card__floral { position: absolute; pointer-events: none; user-select: none; z-index: 1; }
+.card__floral--tl { top: 0; left: 0; width: 50.78%; }
+.card__floral--br { right: 0; bottom: 0; width: 47.27%; }
+
+.card__frame {
+  position: absolute;
+  inset: 4.883%;                 /* 50/1024 */
+  border: 1px solid var(--line);
+  z-index: 2;
+  opacity: .85;
+}
+
+.card__inner {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12.1cqw 6cqw 0;
+  text-align: center;
+}
+
+/* Nombre de los novios */
+.names {
+  margin: 4.7cqw 0 0;
+  font-family: var(--script);
+  font-weight: 400;
+  font-size: 12.5cqw;
+  line-height: .95;
+  letter-spacing: .004em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.names__line { display: block; }
+
+/* Ornamento corazón */
+.ornament {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  margin: 3.65cqw 0 0;
+  color: var(--ink);
+}
+.ornament__line { display: block; width: 16.7cqw; height: 1px; background: var(--line); }
+.ornament__heart { width: 3.2cqw; height: auto; }
+
+.lede {
+  margin: 5.45cqw 0 0;
+  font-size: 4.28cqw;
+  line-height: 1.18;
+  color: var(--ink);
+}
+
+/* Detalles */
+.details {
+  margin: 2.67cqw 0 0;
+  padding-left: 31.8cqw;          /* 37.8% de la tarjeta − 6% de padding del contenedor */
+  align-self: stretch;
+  display: grid;
+  gap: 2.79cqw;
+  text-align: left;
+}
+/* el icono cuelga a la izquierda: la columna de TEXTO es la que queda centrada */
+.detail {
+  position: relative;
+  padding-left: 9.4cqw;
+  margin-left: -9.4cqw;
+}
+
+.detail__icon {
+  position: absolute;
+  left: .1cqw;
+  top: -1.5cqw;
+  width: 6.6cqw;
+  height: 6.6cqw;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-top: .1cqw;
+}
+.detail__text { display: grid; }
+.detail dt,
+.detail dd {
+  margin: 0;
+  font-size: 3.05cqw;
+  line-height: 1;
+  color: var(--ink);
+}
+.detail dd { font-weight: 400; }
+
+.hair {
+  width: 17cqw;
+  height: 1px;
+  margin: 3.9cqw 0 0;
+  background: var(--line);
+}
+
+.closing {
+  margin: 2.9cqw 0 0;
+}
+
+/* El texto del arte original se usa en desktop (donde el formulario está al
+   lado y el botón sería redundante); en móvil/tablet se cambia por el botón. */
+.closing__text {
+  display: none;
+  font-size: 3.78cqw;
+  line-height: 1.12;
+  color: var(--ink);
+}
+
+/* Botón de confirmación DENTRO de la tarjeta: reemplaza el texto
+   «Por favor confirma tu asistencia.» del arte original. */
+.cta-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3cqw;
+  min-height: max(7.6cqw, 44px);    /* nunca menos de 44 px: toque cómodo */
+  padding: 2.2cqw 4.2cqw;
+  color: #08222b;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--serif);
+  font-size: max(3.3cqw, 11.5px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow:
+    0 3cqw 6cqw -3cqw rgba(0, 0, 0, .9),
+    inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: background-color .2s, transform .15s ease, box-shadow .2s;
+}
+.cta-card:hover {
+  background: #fff9ec;
+  transform: translateY(-1px);
+  box-shadow:
+    0 3.4cqw 6.4cqw -3cqw rgba(0, 0, 0, .95),
+    inset 0 1px 0 rgba(255, 255, 255, .85);
+}
+.cta-card:active { transform: translateY(0); }
+.cta-card .cta__chev { width: 1.9cqw; height: 1.9cqw; min-width: 13px; min-height: 13px; }
+
+.cta__chev {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+@keyframes nudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  80%, 90% { transform: translateY(2px); }
+}
+
+/* ══════════════════════ RSVP ══════════════════════ */
+.rsvp:focus { outline: none; }   /* el ancla recibe foco sin dibujar un marco */
+
+.rsvp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 clamp(12px, 3vw, 32px) 8px;
+}
+
+.panel {
+  position: relative;
+  width: 100%;
+  max-width: var(--wrap);
+  padding: clamp(30px, 7vw, 46px) clamp(22px, 6vw, 44px) clamp(26px, 6vw, 40px);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, .04) 0%, rgba(255, 255, 255, 0) 60%),
+    rgba(4, 20, 27, .35);
+  border-radius: 1px;
+}
+.panel__frame {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid var(--line-soft);
+  pointer-events: none;
+}
+
+.panel__head { text-align: center; position: relative; }
+
+.kicker {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.panel__title {
+  margin: 0;
+  font-family: var(--script);
+  font-weight: 400;
+  font-size: clamp(34px, 9vw, 46px);
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.panel__sub {
+  margin: 12px 0 0;
+  font-size: 15px;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+}
+.panel__deadline {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--ink-dim);
+}
+.panel__deadline strong { font-weight: 400; color: var(--ink-soft); }
+.panel__note {
+  margin: 14px auto 0;
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line-soft);
+  padding-top: 12px;
+}
+.panel__note--alerta {
+  color: var(--ink);
+  border-top-color: rgba(226, 218, 201, .55);
+}
+
+/* Formulario */
+.form { margin-top: clamp(24px, 5vw, 32px); display: grid; gap: 20px; }
+
+.field { display: grid; gap: 7px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.field--choice { gap: 11px; }
+
+.label {
+  font-size: 13px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0;
+}
+.label .opt { text-transform: none; letter-spacing: .02em; color: var(--ink-dim); font-size: 12.5px; }
+
+.input {
+  width: 100%;
+  padding: 10px 2px;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  transition: border-color .2s, background-color .2s;
+}
+.input::placeholder { color: rgba(242, 236, 223, .32); }
+.input:hover { border-bottom-color: rgba(226, 218, 201, .45); }
+.input:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+  background: rgba(242, 236, 223, .04);
+}
+.input--area { resize: vertical; min-height: 92px; line-height: 1.5; }
+
+/* Selección sí / no */
+.choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice__opt { position: relative; display: block; cursor: pointer; }
+.choice__opt input {
+  position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%;
+  margin: 0; cursor: pointer;
+}
+.choice__box {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  font-size: 15.5px;
+  text-align: center;
+  color: var(--ink-soft);
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+.choice__opt:hover .choice__box { border-color: rgba(226, 218, 201, .45); color: var(--ink); }
+.choice__opt input:checked + .choice__box {
+  border-color: var(--line);
+  background: rgba(242, 236, 223, .09);
+  color: var(--ink);
+}
+.choice__opt input:focus-visible + .choice__box { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* Botón principal */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 15px 22px;
+  margin-top: 4px;
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #08222b;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow:
+    0 18px 34px -20px rgba(0, 0, 0, .95),
+    inset 0 1px 0 rgba(255, 255, 255, .7);
+  transition: transform .15s ease, background-color .2s, color .2s, opacity .2s, box-shadow .2s;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  background: #fff9ec;
+  box-shadow:
+    0 22px 38px -20px rgba(0, 0, 0, .95),
+    inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+.btn:active { transform: translateY(0); }
+.btn[disabled] { opacity: .6; cursor: progress; transform: none; }
+
+.btn__spinner {
+  display: none;
+  width: 15px; height: 15px;
+  border: 1.5px solid rgba(8, 34, 43, .35);
+  border-top-color: #08222b;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.btn.is-loading .btn__spinner { display: block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn--ghost {
+  width: auto;
+  min-height: 44px;
+  padding: 11px 18px;
+  color: var(--ink);
+  background: rgba(242, 236, 223, .04);
+  border-color: rgba(226, 218, 201, .55);
+  font-size: 12.5px;
+}
+.btn--ghost:hover { border-color: var(--line); background: rgba(242, 236, 223, .05); }
+
+.linkish {
+  margin-top: 18px;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-dim);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 2px 0;
+  cursor: pointer;
+}
+.linkish:hover { color: var(--ink); border-bottom-color: var(--line-soft); }
+
+/* Mensajes */
+.status { margin: 0; min-height: 20px; font-size: 14.5px; color: var(--ink-soft); text-align: center; }
+.status.is-error { color: var(--danger); }
+.error { margin: 0; font-size: 13.5px; color: var(--danger); }
+
+.privacy {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+/* Trampa anti-bot */
+.hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+/* Confirmación */
+.done { text-align: center; padding: 6px 0 4px; }
+.done:focus { outline: none; }
+.done__heart { width: 30px; margin: 0 auto 14px; color: var(--ink); }
+.done__title {
+  margin: 0;
+  font-family: var(--script);
+  font-weight: 400;
+  font-size: clamp(32px, 8vw, 42px);
+  color: var(--ink);
+}
+.done__text { margin: 10px auto 0; max-width: 38ch; font-size: 16px; color: var(--ink-soft); }
+.done__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.foot {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-top: 26px;
+  padding: 16px 0 26px;
+  text-align: center;
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.foot p { margin: 0; }
+
+/* ══════════════════════ AJUSTES ══════════════════════ */
+@media (max-width: 420px) {
+  .card__inner { padding-top: 12.6cqw; }
+  .choice { grid-template-columns: 1fr; }
+}
+
+/* En pantallas muy bajas, la tarjeta no fuerza 100dvh */
+@media (max-height: 780px) and (min-width: 700px) {
+  .hero { min-height: auto; padding-block: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+/* Impresión: la invitación limpia, sin formulario */
+@media print {
+  body { background: #08222b; }
+  .rsvp, .skip-link, .cta-card { display: none !important; }
+  .closing__text { display: block !important; }
+  .hero { min-height: auto; }
+  .card { box-shadow: none; max-width: 100%; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DESKTOP: dos columnas. La invitación crece hasta el alto disponible
+   (su máximo sin necesidad de hacer scroll) y la confirmación va al lado.
+   Para agrandarla más: suba el factor 0.6667 → p. ej. 0.8 (deja de caber
+   en una pantalla y aparece la barra de desplazamiento).
+   ══════════════════════════════════════════════════════════════════ */
+@media (min-width: 1100px) {
+  main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+    align-items: start;
+    gap: clamp(28px, 4vw, 88px);
+    min-height: 100dvh;
+    max-width: 1360px;
+    margin-inline: auto;
+    padding: clamp(16px, 2vw, 30px) clamp(20px, 3vw, 56px);
+  }
+
+  .hero {
+    min-height: 0;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+  }
+
+  /* La invitación se lleva el alto disponible: 2/3 de la altura de la ventana,
+     con un mínimo de 600 px para que nunca se vea "chica" y un tope de
+     --card-max. En un portátil de 900 px de alto = 600 px de ancho; en un
+     monitor de 1080 = 680 px. */
+  .card {
+    width: min(100%, var(--card-max, 760px), max(600px, calc((100dvh - 56px) * 0.6667)));
+    max-width: none;
+    margin-inline: auto;
+  }
+
+
+  /* El formulario acompaña: queda pegado mientras se recorre la invitación */
+  /* Con el formulario al lado, el botón de la tarjeta sobra: vuelve el
+     texto del arte original. */
+  .cta-card { display: none; }
+  .closing__text { display: block; }
+
+  .rsvp {
+    padding: 0;
+    align-self: start;
+    position: sticky;
+    top: clamp(14px, 3vh, 40px);
+  }
+  .panel { max-width: none; }
+  .foot { margin-top: 16px; padding-bottom: 0; }
+}
+
+/* En pantallas de poca altura el panel se compacta para no obligar a bajar */
+@media (min-width: 1100px) and (max-height: 940px) {
+  .panel { padding: 26px clamp(22px, 2.4vw, 34px) 22px; }
+  .panel__title { font-size: clamp(30px, 6vh, 40px); }
+  .panel__sub { margin-top: 8px; }
+  .form { margin-top: 18px; gap: 14px; }
+  .input { padding: 8px 2px; }
+  .input--area { min-height: 74px; }
+  .btn { min-height: 48px; padding: 12px 18px; }
+  .privacy { display: none; }
+}

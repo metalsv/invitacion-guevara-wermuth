@@ -1,0 +1,1 @@
+necesito creemos una invitacion para una boda basandonos en el diseño que  nos han proveeido la intencion es que sea un formulario web o aplicaion web lo qu enos salga mas facil y se pueda guardar en alguna base de datos o en un google docs o xls para la confirmacion de los asistents, y de ser posible si pueden agregar al calendar el evento

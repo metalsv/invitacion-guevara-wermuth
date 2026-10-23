@@ -1,0 +1,9 @@
+work/
+backend/confirmaciones.json
+enlaces.csv
+mensajes.txt
+# listas de invitados: llevan nombres reales, no van al repositorio
+invitados*.csv
+lista*.csv
+node_modules/
+.DS_Store
