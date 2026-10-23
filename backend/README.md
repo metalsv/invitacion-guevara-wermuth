@@ -20,6 +20,43 @@ Invitado   ──GET ?code──►  └──►  Hoja "Invitaciones" (cupo de 
    **`backend/apps-script.gs`**.
 4. Guardar (💾 o `Ctrl+S`) y ponerle nombre al proyecto: `boda-gw`.
 
+## Si sale «Google no ha verificado esta aplicación»
+
+Es **normal** y no es un problema de seguridad: Google muestra ese aviso a
+cualquier script propio que no ha pasado por su revisión (un trámite pensado
+para aplicaciones públicas, no para un script personal).
+
+El camino correcto, siendo su propio proyecto:
+
+1. Clic en **Configuración avanzada** (abajo a la izquierda).
+2. Clic en **Ir a «Proyecto sin título» (no seguro)**.
+3. Revisar los permisos y **Permitir**.
+
+Usted es el autor del script y el único que lo ejecuta; nadie más pasa por esa
+pantalla. Los invitados usan la aplicación web publicada, que no pide permisos.
+
+### Por qué salía y qué se cambió
+
+El script usaba `MailApp` para mandarle un correo por cada confirmación. Ese
+permiso («enviar correo en tu nombre») es **restringido** y es lo que dispara el
+aviso. Se quitó: no hace falta.
+
+Para recibir avisos sin código: en la hoja, **Herramientas ▸ Configuración de
+notificaciones ▸ «Se realiza un cambio»**. Llega un correo con cada fila nueva,
+sin permisos extra.
+
+Además, `appsscript.json` declara los permisos mínimos (`spreadsheets.currentonly`:
+sólo la hoja a la que está ligado el script), así que la pantalla pide mucho menos.
+
+## Permisos mínimos (`appsscript.json`)
+
+En el editor: **⚙ Configuración del proyecto ▸ mostrar el archivo de manifiesto
+`appsscript.json`** y pegar el contenido de `backend/appsscript.json`. Deja declarado:
+
+- `spreadsheets.currentonly` — sólo la hoja de la boda, nada más de la cuenta.
+- `webapp.executeAs: USER_DEPLOYING` y `access: ANYONE_ANONYMOUS` — al publicar,
+  los desplegables ya salen en «Ejecutar como: yo» y «Acceso: cualquier persona».
+
 ## Paso 2 · Preparar las hojas
 
 1. En el editor de Apps Script, elegir en la lista de funciones **`preparar`** y pulsar **Ejecutar**.

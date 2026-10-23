@@ -17,7 +17,9 @@ const CFG = {
   SHEET_ID: '',
   // Filas mínimas entre el envío y la llegada del formulario (dificulta bots)
   MIN_SEGUNDOS: 2,
-  AVISAR_A: ''            // correo opcional para recibir cada confirmación
+  // Avisos por correo: NO se usan a propósito. Para enterarte de cada
+  // confirmación, en la hoja: Herramientas ▸ Configuración de notificaciones.
+  // (MailApp pedía permiso restringido y provocaba el aviso de Google.)
 };
 
 /** ── Lista de invitados ─────────────────────────────────────────────
@@ -201,15 +203,7 @@ function doPost(e) {
     // 5) resumen de cupos por invitación (hoja de control del organizador)
     actualizarResumen_();
 
-    if (CFG.AVISAR_A && asiste === 'si') {
-      MailApp.sendEmail({
-        to: CFG.AVISAR_A,
-        subject: `Confirmación: ${nombre}${acompanante ? ' + ' + acompanante : ''}`,
-        body: `${nombre} confirmó ${personas} persona(s).\n` +
-              `Código: ${codigo || '(sin código)'}\nCupo de la invitación: ${cupo}\n` +
-              `Restricciones: ${restricciones || '—'}\nMensaje: ${mensaje || '—'}`
-      });
-    }
+    Logger.log(`Confirmación: ${nombre} · ${personas} persona(s) · código ${codigo || '(sin)'}`);
 
     return json_({ ok: true, actualizado: filaExistente > 0, cupo: cupo, personas: personas });
   } catch (err) {
