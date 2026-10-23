@@ -133,9 +133,11 @@ ok(fUrl.includes('https://metalsv.github.io/invitacion-guevara-wermuth/') && fUr
    'la columna enlace arma la URL del código', fUrl.slice(0, 90));
 ok(fMsg.includes('IF($C2=2') && fMsg.includes('2 lugares') && fMsg.includes('1 lugar'),
    'el mensaje cambia según el cupo', fMsg.slice(0, 70) + '…');
-ok(Object.keys(libro.hojas['Invitaciones'].formulas).length >= 900,
-   'cubre 500 filas (para invitaciones nuevas)',
-   Object.keys(libro.hojas['Invitaciones'].formulas).length + ' celdas con fórmula');
+const celdas = Object.keys(libro.hojas['Invitaciones'].formulas).length;
+ok(celdas === 58, 'cubre 3 filas de datos + 25 de margen (29 filas × 2 columnas)',
+   celdas + ' celdas con fórmula');
+ok((libro.hojas['Invitaciones'].formulas['30:6'] || '').includes('&$A30'),
+   'la última fila del margen apunta a su propia fila');
 
 console.log('\n3) doGet');
 const g1 = get('GW-01'), g2 = get('GW-02');

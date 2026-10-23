@@ -262,8 +262,9 @@ function preparar() {
  *    F  enlace   → la URL completa para el invitado (?i=CODIGO)
  *    G  mensaje  → el texto listo para pegar en WhatsApp, con el cupo correcto
  *  Son fórmulas, así que se actualizan solas en cuanto se escribe el código.
- *  Se cubren 200 filas de más para que las invitaciones nuevas ya nazcan
- *  con su enlace, sin tocar nada.
+ *  Se cubren unas 25 filas de más para que las invitaciones nuevas ya
+ *  nazcan con su enlace; si se agregan más, basta ejecutar de nuevo
+ *  sincronizarInvitados (el rango se recalcula solo).
  *  ──────────────────────────────────────────────────────────────────── */
 function instalarEnlaces_() {
   const hoja = hoja_(CFG.HOJA_INVITACIONES);
@@ -284,7 +285,8 @@ function instalarEnlaces_() {
   const codigos = hoja.getRange(2, 1, filas, 1).getValues();
   let ultimaConCodigo = 0;
   codigos.forEach(function (f, i) { if (String(f[0] || '').trim()) ultimaConCodigo = i + 2; });
-  const hasta = Math.max(500, ultimaConCodigo + 50);
+  // sólo lo que hay + un margen cómodo: la hoja se mantiene corta
+  const hasta = Math.max(30, ultimaConCodigo + 25);
   const valores = [];
   for (let i = 2; i <= hasta; i++) {
     valores.push([formulaEnlace_(i, base), formulaMensaje_(i)]);
@@ -296,7 +298,8 @@ function instalarEnlaces_() {
   hoja.setColumnWidth(6, 430);
   hoja.setColumnWidth(7, 430);
   hoja.setFrozenRows(1);
-  Logger.log('Enlaces listos en la columna F (mensaje en G) hasta la fila ' + hasta);
+  Logger.log('Enlaces listos en la columna F (mensaje en G) hasta la fila ' + hasta +
+             ' — margen para 25 invitaciones nuevas');
 }
 
 function formulaEnlace_(fila, base) {

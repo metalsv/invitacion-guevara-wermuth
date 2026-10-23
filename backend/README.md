@@ -103,8 +103,11 @@ En la hoja `Invitaciones` hay dos columnas calculadas (fórmulas, no texto):
 | **G · mensaje** | Arma el texto de WhatsApp con el nombre, la fecha, la dirección y **el cupo correcto** («Te reservamos 1 lugar» / «Les reservamos 2 lugares»). |
 
 Basta escribir `codigo`, `nombre` y `cupo` en A, B y C: F y G aparecen solas, al
-instante, hasta la fila 500. No hay que copiar URLs a mano (ahí es donde se
-cometen los errores).
+instante. No hay que copiar URLs a mano (ahí es donde se cometen los errores).
+
+Las fórmulas cubren las filas con datos **más 25 de margen** (mínimo 30 filas),
+así la hoja no se ve gigante. Si agrega más invitaciones que ese margen, ejecute
+`sincronizarInvitados` otra vez y el rango se amplía solo.
 
 Para copiar el mensaje: clic en la celda de G y *Ctrl+C*; se pega en WhatsApp con
 sus saltos de línea.
