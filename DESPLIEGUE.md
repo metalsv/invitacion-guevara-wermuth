@@ -2,7 +2,19 @@
 
 ## Dominio propio: boda-guevara-wermuth.artechstudio.net
 
-Estado: **pendiente el registro DNS**. El resto ya está preparado.
+Estado: **funcionando** ✅ (verificado el 23 de octubre de 2026).
+
+| | |
+|---|---|
+| Sitio | https://boda-guevara-wermuth.artechstudio.net/ |
+| DNS | CNAME `boda-guevara-wermuth` → `metalsv.github.io` (Cloudflare, **DNS only**) |
+| Certificado | Let's Encrypt emitido por GitHub, estado `approved` |
+| HTTPS | forzado (`https_enforced: true`); `http://` redirige a `https://` |
+| Dominio viejo | `metalsv.github.io/invitacion-guevara-wermuth` → 301 al nuevo |
+
+Mientras el DNS propaga, algunos equipos con la respuesta antigua en caché
+muestran `DNS_PROBE_FINISHED_NXDOMAIN` durante unos minutos; se resuelve solo
+(Cloudflare usa TTL de 5 minutos).
 
 ### 1. En Cloudflare (lo hace el dueño del dominio)
 
