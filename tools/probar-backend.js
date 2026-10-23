@@ -130,7 +130,7 @@ ok(inv.filas.length === 4, 'sigue habiendo 3 invitados (no duplica)', `${inv.fil
 console.log('\n2b) enlaces y mensajes calculados (sin fórmulas)');
 const inv2 = libro.hojas['Invitaciones'];
 const celda = (f, c) => (inv2.filas[f - 1] || [])[c - 1] || '';
-ok(String(celda(2, 6)).includes('https://metalsv.github.io/invitacion-guevara-wermuth/?i=GW-01'),
+ok(String(celda(2, 6)) === 'https://boda-guevara-wermuth.artechstudio.net/?i=GW-01',
    'F2 tiene la URL de GW-01', String(celda(2, 6)));
 ok(String(celda(3, 7)).includes('¡Hola Familia Guevara!'), 'G3 saluda por su nombre');
 ok(String(celda(3, 7)).includes('Les reservamos 2 lugares'), 'G3 dice «2 lugares» para cupo 2');
@@ -141,7 +141,7 @@ console.log('\n2c) al escribir una invitación nueva, aparece el enlace');
 // simula escribir A6, B6, C6 y el onEdit que dispara Google
 inv2.filas[5] = ['GUEVARA-A-2', 'Primos Guevara', 2, '', ''];
 contexto.onEdit({ range: { getSheet: () => inv2, getRow: () => 6, getNumRows: () => 1, getColumn: () => 1 } });
-ok(String(celda(6, 6)) === 'https://metalsv.github.io/invitacion-guevara-wermuth/?i=GUEVARA-A-2',
+ok(String(celda(6, 6)) === 'https://boda-guevara-wermuth.artechstudio.net/?i=GUEVARA-A-2',
    'F6 se llenó solo', String(celda(6, 6)));
 ok(String(celda(6, 7)).includes('Les reservamos 2 lugares'), 'G6 con el cupo correcto');
 
@@ -149,6 +149,16 @@ console.log('\n2d) al borrar el código se limpia todo');
 inv2.filas[5] = ['', '', '', '', ''];
 contexto.onEdit({ range: { getSheet: () => inv2, getRow: () => 6, getNumRows: () => 1, getColumn: () => 1 } });
 ok(celda(6, 6) === '' && celda(6, 7) === '', 'F6 y G6 quedaron vacías');
+
+console.log('\n2e) el dominio se cambia desde la hoja Config');
+const cfg = libro.hojas['Config'];
+ok(!!cfg, 'existe la pestaña Config');
+cfg.filas[1] = ['sitio', 'https://otro-dominio.test'];
+contexto.rehacerEnlaces();
+ok(String(celda(2, 6)) === 'https://otro-dominio.test/?i=GW-01',
+   'al cambiar Config!sitio, los enlaces se rehacen', String(celda(2, 6)));
+cfg.filas[1] = ['sitio', 'https://boda-guevara-wermuth.artechstudio.net'];
+contexto.rehacerEnlaces();
 
 console.log('\n3) doGet');
 const g1 = get('GW-01'), g2 = get('GW-02');

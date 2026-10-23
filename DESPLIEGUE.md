@@ -1,5 +1,51 @@
 # Despliegue
 
+## Dominio propio: boda-guevara-wermuth.artechstudio.net
+
+Estado: **pendiente el registro DNS**. El resto ya está preparado.
+
+### 1. En Cloudflare (lo hace el dueño del dominio)
+
+*DNS ▸ Records ▸ Add record*:
+
+| Campo | Valor |
+|---|---|
+| Type | `CNAME` |
+| Name | `boda-guevara-wermuth` |
+| Target | `metalsv.github.io` |
+| Proxy status | **DNS only** (nube gris) |
+| TTL | Auto |
+
+> ⚠️ **La nube debe quedar gris.** Con el proxy de Cloudflare activo (naranja),
+> GitHub no puede emitir el certificado y el sitio da error de conexión.
+> Si más adelante quieren el proxy, se activa *después* de que el certificado
+> HTTPS de GitHub esté emitido y forzado.
+
+### 2. En GitHub Pages (una sola vez)
+
+```bash
+gh api --method PUT /repos/metalsv/invitacion-guevara-wermuth/pages \
+  -f cname='boda-guevara-wermuth.artechstudio.net'
+```
+
+GitHub verifica el DNS y emite el certificado (de minutos a una hora).
+Después se activa *Enforce HTTPS* y se comprueba:
+
+```bash
+curl -sI https://boda-guevara-wermuth.artechstudio.net/ | head -1
+```
+
+El sitio viejo (`metalsv.github.io/invitacion-guevara-wermuth`) **redirige solo**
+al dominio nuevo, así que los enlaces ya repartidos siguen funcionando.
+
+### 3. En la hoja de Google
+
+El dominio de los enlaces se toma de la pestaña **Config** (fila `sitio`).
+Al cambiarlo, ejecutar `rehacerEnlaces` y las 500 URLs se rehacen con el
+dominio nuevo. No hay que tocar código ni volver a publicar el Apps Script.
+
+---
+
 ## Estado actual: publicado en GitHub Pages
 
 | | |

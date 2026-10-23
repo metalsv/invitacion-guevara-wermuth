@@ -12,13 +12,14 @@
 const CFG = {
   HOJA_INVITACIONES: 'Invitaciones',
   HOJA_RESPUESTAS: 'Confirmaciones',
+  HOJA_CONFIG: 'Config',
   // Si el script está ligado a una hoja (Extensiones ▸ Apps Script) déjalo así.
   // Si es un script independiente, pon aquí el ID de la hoja:
   SHEET_ID: '',
   // Dirección pública del sitio: con ella se arman los enlaces de cada fila.
   // Si algún día ponen dominio propio, se cambia aquí y se pulsa
   // Ejecutar ▸ sincronizarInvitados (las fórmulas se rehacen solas).
-  SITIO: 'https://metalsv.github.io/invitacion-guevara-wermuth/',
+  SITIO: 'https://boda-guevara-wermuth.artechstudio.net/',
   // Filas mínimas entre el envío y la llegada del formulario (dificulta bots)
   MIN_SEGUNDOS: 2,
   // Avisos por correo: NO se usan a propósito. Para enterarte de cada
@@ -253,11 +254,58 @@ function actualizarResumen_() {
 function preparar() {
   hoja_(CFG.HOJA_INVITACIONES);
   hoja_(CFG.HOJA_RESPUESTAS);
+  prepararConfig_();
   const n = sincronizarInvitados();     // crea o actualiza, nunca duplica
   actualizarResumen_();
   Logger.log('Invitaciones sincronizadas: ' + n);
   Logger.log('Listo. Ahora publica: Implementar ▸ Nueva implementación ▸ Aplicación web.');
   Logger.log('Ejecutar como: yo · Quién tiene acceso: cualquier persona.');
+}
+
+/** ── Configuración desde la hoja ──────────────────────────────────────
+ *  La pestaña "Config" guarda lo que puede cambiar sin tocar el código:
+ *    sitio  → dirección pública (de ahí salen los enlaces de cada invitado)
+ *    fecha  → cómo se escribe la fecha en el mensaje de WhatsApp
+ *    lugar  → el lugar en ese mismo mensaje
+ *  Si falta la pestaña o una fila, se usa el valor de CFG aquí abajo.
+ *  ──────────────────────────────────────────────────────────────────── */
+function valorConfig_(clave, porDefecto) {
+  try {
+    const hoja = libro_().getSheetByName(CFG.HOJA_CONFIG);
+    if (hoja) {
+      const filas = hoja.getDataRange().getValues();
+      for (const f of filas) {
+        if (String(f[0] || '').trim().toLowerCase() === clave) {
+          const v = String(f[1] || '').trim();
+          if (v) return v;
+        }
+      }
+    }
+  } catch (err) {
+    Logger.log('Config: ' + (err.stack || err));
+  }
+  return porDefecto;
+}
+
+function sitio_() { return valorConfig_('sitio', CFG.SITIO); }
+
+/** Crea la pestaña Config si no existe (no pisa lo que ya haya). */
+function prepararConfig_() {
+  const libro = libro_();
+  let hoja = libro.getSheetByName(CFG.HOJA_CONFIG);
+  if (!hoja) hoja = libro.insertSheet(CFG.HOJA_CONFIG);
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow(['clave', 'valor']);
+    hoja.appendRow(['sitio', CFG.SITIO]);
+    hoja.appendRow(['fecha', 'sábado 14 de noviembre a las 5:00 p.m.']);
+    hoja.appendRow(['lugar', 'Pampa el Volcán']);
+    hoja.getRange('A1:B1').setFontWeight('bold');
+    hoja.setColumnWidth(1, 120);
+    hoja.setColumnWidth(2, 460);
+    hoja.setFrozenRows(1);
+    Logger.log('Pestaña Config creada.');
+  }
+  return hoja;
 }
 
 /** ── Enlaces automáticos ─────────────────────────────────────────────
@@ -328,15 +376,17 @@ function rehacerEnlaces() {
 }
 
 function enlaceDe_(codigo) {
-  const base = String(CFG.SITIO || '').replace(/\/?$/, '');
+  const base = String(sitio_() || '').replace(/\/+$/, '');
   return base + '/?i=' + encodeURIComponent(codigo);
 }
 
 function mensajeDe_(codigo, nombre, cupo) {
-  const lugar = cupo === 2 ? 'Les reservamos 2 lugares.' : 'Te reservamos 1 lugar.';
+  const cupoTexto = cupo === 2 ? 'Les reservamos 2 lugares.' : 'Te reservamos 1 lugar.';
+  const cuando = valorConfig_('fecha', 'sábado 14 de noviembre a las 5:00 p.m.');
+  const donde = valorConfig_('lugar', 'Pampa el Volcán');
   return '¡Hola ' + nombre + '!' + '\n\n' +
-         'Nos casamos el sábado 14 de noviembre a las 5:00 p.m. en Pampa el Volcán.' + '\n\n' +
-         lugar + ' Confirma aquí:' + '\n' +
+         'Nos casamos el ' + cuando + ' en ' + donde + '.' + '\n\n' +
+         cupoTexto + ' Confirma aquí:' + '\n' +
          enlaceDe_(codigo) + '\n\n' +
          '¡Ojalá puedan acompañarnos!';
 }
