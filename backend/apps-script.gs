@@ -308,6 +308,31 @@ function prepararConfig_() {
   return hoja;
 }
 
+/** ── Empezar de cero (antes de repartir los enlaces) ──────────────────
+ *  Vacía la lista de invitados y las respuestas, deja las hojas limpias con
+ *  sus encabezados, conserva la pestaña Config y vuelve a cargar la lista
+ *  INVITADOS de este script.
+ *
+ *  ⚠️ Borra TODAS las confirmaciones. Úsalo sólo antes de mandar invitaciones
+ *  (si ya hay respuestas reales, no lo ejecutes).
+ *  Google Sheets guarda el historial: Archivo ▸ Historial de versiones.
+ *  ──────────────────────────────────────────────────────────────────── */
+function empezarDeCero() {
+  const inv = hoja_(CFG.HOJA_INVITACIONES);
+  const resp = hoja_(CFG.HOJA_RESPUESTAS);
+
+  [inv, resp].forEach(function (hoja) {
+    const ultima = hoja.getLastRow();
+    if (ultima > 1) hoja.deleteRows(2, ultima - 1);   // deja sólo el encabezado
+  });
+
+  prepararConfig_();
+  const n = sincronizarInvitados();
+  Logger.log('Empezar de cero: ' + n + ' invitación(es) cargada(s), respuestas vacías.');
+  Logger.log('Si querías conservar datos, recupera con Archivo ▸ Historial de versiones.');
+  return n;
+}
+
 /** ── Enlaces automáticos ─────────────────────────────────────────────
  *  Escribe en la hoja dos columnas calculadas:
  *    F  enlace   → la URL completa para el invitado (?i=CODIGO)

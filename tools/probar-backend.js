@@ -26,6 +26,7 @@ const CODIGO = fs.readFileSync(path.join(RAIZ, 'backend', 'apps-script.gs'), 'ut
 class HojaFalsa {
   constructor(nombre) { this.nombre = nombre; this.filas = []; this.formulas = {}; }
   getName() { return this.nombre; }
+  deleteRows(inicio, cuantas) { this.filas.splice(inicio - 1, cuantas); return this; }
   appendRow(fila) { this.filas.push(fila.slice()); return this; }
   getLastRow() { return this.filas.length; }
   setFrozenRows() { return this; }
@@ -159,6 +160,18 @@ ok(String(celda(2, 6)) === 'https://otro-dominio.test/?i=GW-01',
    'al cambiar Config!sitio, los enlaces se rehacen', String(celda(2, 6)));
 cfg.filas[1] = ['sitio', 'https://boda-guevara-wermuth.artechstudio.net'];
 contexto.rehacerEnlaces();
+
+console.log('\n2f) empezar de cero');
+post({ code: 'GW-01', nombre: 'Alguien Real', asiste: 'si', ts: Date.now() - 5000 });
+libro.hojas['Invitaciones'].filas.push(['BASURA-1', 'Fila de prueba', 1, '', '']);
+const n2 = contexto.empezarDeCero();
+ok(n2 === 3, 'recarga las 3 invitaciones de INVITADOS', 'n=' + n2);
+ok(libro.hojas['Invitaciones'].filas.length === 4, 'Invitaciones: encabezado + 3',
+   libro.hojas['Invitaciones'].filas.length + ' filas');
+ok(libro.hojas['Confirmaciones'].filas.length === 1, 'Confirmaciones: sólo el encabezado',
+   libro.hojas['Confirmaciones'].filas.length + ' filas');
+ok(!!libro.hojas['Config'], 'conserva la pestaña Config');
+ok(String(celda(2, 6)).includes('?i=GW-01'), 'los enlaces se rehicieron', String(celda(2, 6)));
 
 console.log('\n3) doGet');
 const g1 = get('GW-01'), g2 = get('GW-02');
