@@ -48,7 +48,15 @@
 /* el atributo hidden debe ganarle a cualquier display de las clases */
 [hidden] { display: none !important; }
 
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html { -webkit-text-size-adjust: 100%; }
+
+/* ── Respuesta táctil ──────────────────────────────────────────────────
+   touch-action: manipulation quita el retardo de ~300 ms que el navegador
+   espera por si viene un doble toque (en móvil hacía que un botón pareciera
+   "no responder al primer toque"). El destello gris del sistema se quita y
+   se reemplaza por un :active propio. */
+a, button, label, input, textarea, summary, [role="button"] { touch-action: manipulation; }
+a, button, label { -webkit-tap-highlight-color: transparent; }
 
 body {
   margin: 0;
@@ -57,12 +65,17 @@ body {
   background-image:
     radial-gradient(150% 110% at 50% -10%, #0a232b 0%, #051a21 55%, #03121a 100%);
   background-color: #03121a;
-  background-attachment: fixed;
   font-family: var(--serif);
   font-size: 17px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* El fondo fijo se repinta en cada frame y en móvil provoca tirones:
+   en pantallas pequeñas el degradado acompaña el scroll. */
+@media (min-width: 700px) {
+  body { background-attachment: fixed; }
 }
 
 img { max-width: 100%; height: auto; display: block; }
@@ -89,7 +102,11 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ══════════════════════ HERO / TARJETA ══════════════════════ */
 .hero {
-  min-height: 100dvh;
+  /* 100dvh cambia de valor cuando el navegador móvil oculta/muestra su barra
+     al hacer scroll: eso redimensiona el hero y "mueve" todo lo de abajo.
+     100svh es estable (alto con la barra visible), así que no hay saltos. */
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -252,14 +269,7 @@ img { max-width: 100%; height: auto; display: block; }
     inset 0 1px 0 rgba(255, 255, 255, .7);
   transition: background-color .2s, transform .15s ease, box-shadow .2s;
 }
-.cta-card:hover {
-  background: #fff9ec;
-  transform: translateY(-1px);
-  box-shadow:
-    0 3.4cqw 6.4cqw -3cqw rgba(0, 0, 0, .95),
-    inset 0 1px 0 rgba(255, 255, 255, .85);
-}
-.cta-card:active { transform: translateY(0); }
+.cta-card:active { transform: translateY(0); background: #fff9ec; }
 .cta-card .cta__chev { width: 1.9cqw; height: 1.9cqw; min-width: 13px; min-height: 13px; }
 
 .cta__chev {
@@ -350,7 +360,10 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 /* Formulario */
-.form { margin-top: clamp(24px, 5vw, 32px); display: grid; gap: 20px; }
+/* overflow-anchor: none evita que el navegador "compense" el scroll por su
+   cuenta cuando aparecen o se ocultan campos (eso movía la vista al elegir
+   «No podré asistir»). */
+.form { margin-top: clamp(24px, 5vw, 32px); display: grid; gap: 20px; overflow-anchor: none; }
 
 .field { display: grid; gap: 7px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .field--choice { gap: 11px; }
@@ -377,7 +390,6 @@ img { max-width: 100%; height: auto; display: block; }
   transition: border-color .2s, background-color .2s;
 }
 .input::placeholder { color: rgba(242, 236, 223, .32); }
-.input:hover { border-bottom-color: rgba(226, 218, 201, .45); }
 .input:focus {
   outline: none;
   border-bottom-color: var(--ink);
@@ -403,7 +415,8 @@ img { max-width: 100%; height: auto; display: block; }
   color: var(--ink-soft);
   transition: border-color .2s, background-color .2s, color .2s;
 }
-.choice__opt:hover .choice__box { border-color: rgba(226, 218, 201, .45); color: var(--ink); }
+/* respuesta inmediata al toque (reemplaza el destello gris del sistema) */
+.choice__opt:active .choice__box { background: rgba(242, 236, 223, .13); }
 .choice__opt input:checked + .choice__box {
   border-color: var(--line);
   background: rgba(242, 236, 223, .09);
@@ -437,14 +450,7 @@ img { max-width: 100%; height: auto; display: block; }
     inset 0 1px 0 rgba(255, 255, 255, .7);
   transition: transform .15s ease, background-color .2s, color .2s, opacity .2s, box-shadow .2s;
 }
-.btn:hover {
-  transform: translateY(-1px);
-  background: #fff9ec;
-  box-shadow:
-    0 22px 38px -20px rgba(0, 0, 0, .95),
-    inset 0 1px 0 rgba(255, 255, 255, .8);
-}
-.btn:active { transform: translateY(0); }
+.btn:active { transform: translateY(0); background: #fff9ec; }
 .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
 
 .btn__spinner {
@@ -467,7 +473,6 @@ img { max-width: 100%; height: auto; display: block; }
   border-color: rgba(226, 218, 201, .55);
   font-size: 12.5px;
 }
-.btn--ghost:hover { border-color: var(--line); background: rgba(242, 236, 223, .05); }
 
 .linkish {
   margin-top: 18px;
@@ -480,7 +485,6 @@ img { max-width: 100%; height: auto; display: block; }
   padding: 2px 0;
   cursor: pointer;
 }
-.linkish:hover { color: var(--ink); border-bottom-color: var(--line-soft); }
 
 /* Mensajes */
 .status { margin: 0; min-height: 20px; font-size: 14.5px; color: var(--ink-soft); text-align: center; }
@@ -568,6 +572,10 @@ img { max-width: 100%; height: auto; display: block; }
    en una pantalla y aparece la barra de desplazamiento).
    ══════════════════════════════════════════════════════════════════ */
 @media (min-width: 1100px) {
+  /* El scroll suave sólo en escritorio: en móvil la página se siente
+     "flotante" si todo salto se anima durante casi un segundo. */
+  html { scroll-behavior: smooth; }
+
   main {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
@@ -623,4 +631,30 @@ img { max-width: 100%; height: auto; display: block; }
   .input--area { min-height: 74px; }
   .btn { min-height: 48px; padding: 12px 18px; }
   .privacy { display: none; }
+}
+
+/* ══════════════════════ HOVER (sólo con ratón) ══════════════════════
+   En pantallas táctiles el :hover queda "pegado" después del toque: el botón
+   se ve seleccionado hasta que se toca otra parte de la página. Por eso el
+   realce al pasar el cursor se aplica sólo cuando hay un puntero que puede
+   posarse; en el teléfono manda :active (respuesta inmediata al toque). */
+@media (hover: hover) and (pointer: fine) {
+  .cta-card:hover {
+    background: #fff9ec;
+    transform: translateY(-1px);
+    box-shadow:
+      0 3.4cqw 6.4cqw -3cqw rgba(0, 0, 0, .95),
+      inset 0 1px 0 rgba(255, 255, 255, .85);
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    background: #fff9ec;
+    box-shadow:
+      0 22px 38px -20px rgba(0, 0, 0, .95),
+      inset 0 1px 0 rgba(255, 255, 255, .8);
+  }
+  .btn--ghost:hover { border-color: var(--line); background: rgba(242, 236, 223, .05); }
+  .choice__opt:hover .choice__box { border-color: rgba(226, 218, 201, .45); color: var(--ink); }
+  .input:hover { border-bottom-color: rgba(226, 218, 201, .45); }
+  .linkish:hover { color: var(--ink); border-bottom-color: var(--line-soft); }
 }

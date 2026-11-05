@@ -315,7 +315,10 @@
     $('#mapa').href = EV.maps || '#';
     $('#done-actions').hidden = !va;
     setStatus('');
-    done.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // En móvil el salto es inmediato: animarlo se siente como si la página
+    // siguiera moviéndose sola después de enviar.
+    const saltoSuave = window.matchMedia('(min-width: 1100px)').matches;
+    done.scrollIntoView({ block: 'center', behavior: saltoSuave ? 'smooth' : 'auto' });
     // el foco pasa al mensaje nuevo para que un lector de pantalla lo anuncie
     done.setAttribute('tabindex', '-1');
     done.focus({ preventScroll: true });
