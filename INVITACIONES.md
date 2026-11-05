@@ -34,7 +34,7 @@ poner "vamos 6" y no habría manera de saber quién tiene derecho a cuántos.
    Nada de "número de personas". Los campos de menú se ocultan si responde que no asiste.
 4. **Se puede cambiar de opinión.** Volver a entrar al mismo enlace y responder otra vez
    **actualiza** la fila (columna `actualizaciones`), no duplica.
-5. **Cierre con fecha límite.** "Te pedimos confirmar antes del 7 de noviembre" en el
+5. **Cierre con fecha límite.** "Te pedimos confirmar antes del lunes 9 de noviembre" en el
    panel del formulario; después de esa fecha la lista ya está cerrada para el salón.
 6. **Después de confirmar:** el sitio muestra el resumen, el botón para agregar el evento
    al calendario y el enlace «cómo llegar». Eso reduce los "¿a qué hora era?".
