@@ -64,6 +64,7 @@
     if (sub) sub.textContent = n === 2 ? 'Espacio reservado: 2 lugares' : 'Espacio reservado: 1 lugar';
     if (companionField) companionField.hidden = n < 2;
     if (acompanante && n < 2) acompanante.value = '';
+    sincronizarModo();
   }
 
   /* ── Mensajes del formulario ────────────────────────────────────── */
@@ -151,11 +152,20 @@
     return el ? el.value : 'si';
   }
 
+  function menuValor(campo) {
+    const el = form.querySelector('input[name="' + campo + '"]:checked');
+    return el ? el.value : 'pollo';
+  }
+
   function sincronizarModo() {
     const va = asisteValor() === 'si';
+    const conAcompanante = state.cupo === 2;
     whenAttending.forEach(el => {
-      el.hidden = !va;
-      el.querySelectorAll('input, textarea').forEach(i => { i.disabled = !va; });
+      // el menú del acompañante sólo aplica si además hay 2 lugares
+      const necesitaAcompanante = el.hasAttribute('data-companion');
+      const visible = va && (!necesitaAcompanante || conAcompanante);
+      el.hidden = !visible;
+      el.querySelectorAll('input, textarea').forEach(i => { i.disabled = !visible; });
     });
     $$('.btn--ghost').forEach(b => { b.hidden = !va; });
   }
@@ -186,12 +196,16 @@
       return;
     }
 
+    const asiste = asisteValor();
+    const vieneAcompanante = !companionField.hidden && Boolean(comp);
     const payload = {
       code: state.code,
       nombre: name,
-      asiste: asisteValor(),
+      asiste: asiste,
       acompanante: companionField.hidden ? '' : comp,
       cupo: state.cupo,
+      menu: asiste === 'si' ? menuValor('menu') : '',
+      menuAcompanante: (asiste === 'si' && vieneAcompanante) ? menuValor('menuAcompanante') : '',
       restricciones: $('#restricciones').value.trim().slice(0, 140),
       mensaje: $('#mensaje').value.trim().slice(0, 400),
       ts: T0,
@@ -234,6 +248,8 @@
   });
 
   /* ── Respaldo sin base de datos ─────────────────────────────────── */
+  function textoMenu(v) { return v === 'carne' ? 'Carne' : 'Pollo'; }
+
   function textoRespaldo(p) {
     const cupo = p.cupo === 2 ? '2 lugares' : '1 lugar';
     const partes = [
@@ -242,7 +258,9 @@
       'Asistencia: ' + (p.asiste === 'si' ? 'Sí' : 'No'),
       'Cupo: ' + cupo
     ];
+    if (p.menu) partes.push('Menú: ' + textoMenu(p.menu));
     if (p.acompanante) partes.push('Acompañante: ' + p.acompanante);
+    if (p.menuAcompanante) partes.push('Menú acompañante: ' + textoMenu(p.menuAcompanante));
     if (p.restricciones) partes.push('Restricciones: ' + p.restricciones);
     if (p.mensaje) partes.push('Mensaje: ' + p.mensaje);
     if (p.code) partes.push('Código: ' + p.code);

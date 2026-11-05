@@ -60,15 +60,35 @@ function hoja_(nombre) {
     } else {
       hoja.appendRow([
         'marca_tiempo', 'codigo', 'nombre', 'asiste', 'cupo',
-        'acompanante', 'personas', 'restricciones', 'mensaje', 'actualizaciones'
+        'acompanante', 'personas', 'menu', 'menu_acompanante',
+        'restricciones', 'mensaje', 'actualizaciones'
       ]);
-      hoja.getRange('A1:J1').setFontWeight('bold');
+      hoja.getRange('A1:L1').setFontWeight('bold');
       hoja.setFrozenRows(1);
       hoja.setColumnWidth(1, 160);
-      hoja.setColumnWidth(9, 320);
+      hoja.setColumnWidth(11, 320);
     }
+  } else if (nombre === CFG.HOJA_RESPUESTAS) {
+    migrarColumnasMenu_(hoja);
   }
   return hoja;
+}
+
+/** Migración automática: agrega las columnas "menu" y "menu_acompanante"
+ *  a una hoja "Confirmaciones" ya existente (de antes de este cambio),
+ *  insertándolas justo antes de "restricciones" para no mover ni perder
+ *  los datos de las filas que ya estaban guardadas. Idempotente: si ya
+ *  existe la columna "menu" no hace nada. */
+function migrarColumnasMenu_(hoja) {
+  const ultimaCol = Math.max(hoja.getLastColumn(), 1);
+  const enc = hoja.getRange(1, 1, 1, ultimaCol).getValues()[0];
+  if (enc.indexOf('menu') >= 0) return;   // ya migrada
+  let pos = enc.indexOf('restricciones') + 1;   // columna 1-based
+  if (pos <= 0) pos = ultimaCol + 1;            // por si la hoja viene sin esa columna
+  hoja.insertColumnsBefore(pos, 2);
+  hoja.getRange(1, pos, 1, 2).setValues([['menu', 'menu_acompanante']]);
+  hoja.getRange(1, pos, 1, 2).setFontWeight('bold');
+  Logger.log('Migración: columnas "menu" y "menu_acompanante" agregadas en la hoja Confirmaciones.');
 }
 
 /** Responde JSON (Apps Script ya agrega las cabeceras CORS). */
@@ -158,6 +178,7 @@ function doPost(e) {
     const asiste = cuerpo.asiste === 'si' ? 'si' : 'no';
     const restricciones = texto_(cuerpo.restricciones, 140);
     const mensaje = texto_(cuerpo.mensaje, 400);
+    const menuValido = v => (v === 'carne' ? 'carne' : (v === 'pollo' ? 'pollo' : ''));
 
     if (nombre.length < 3) return json_({ ok: false, error: 'Nombre inválido' });
     if (!/^[A-Za-zÁÉÍÓÚÜÑÇáéíóúüñç' .-]{3,80}$/.test(nombre)) {
@@ -182,6 +203,12 @@ function doPost(e) {
     let acompanante = cupo === 2 ? texto_(cuerpo.acompanante, 80) : '';
     const personas = asiste === 'si' ? (acompanante ? 2 : 1) : 0;
 
+    // menú: sólo tiene sentido si la persona asiste. Si el cliente no lo manda
+    // (navegador con caché vieja) se deja vacío: no se inventa una preferencia.
+    const menu = asiste === 'si' ? menuValido(cuerpo.menu) : '';
+    const menuAcompanante = (asiste === 'si' && acompanante)
+      ? menuValido(cuerpo.menuAcompanante) : '';
+
     // 4) ¿ya existía una respuesta para este código/nombre?
     const hojaResp = hoja_(CFG.HOJA_RESPUESTAS);
     const datos = hojaResp.getDataRange().getValues();
@@ -199,14 +226,14 @@ function doPost(e) {
 
     if (filaExistente > 0) {
       const previas = Number(hojaResp.getRange(filaExistente, col('actualizaciones') + 1).getValue() || 0) + 1;
-      hojaResp.getRange(filaExistente, 1, 1, 10).setValues([[
+      hojaResp.getRange(filaExistente, 1, 1, 12).setValues([[
         sello, codigo, nombre, asiste, cupo, acompanante, personas,
-        restricciones, mensaje, previas
+        menu, menuAcompanante, restricciones, mensaje, previas
       ]]);
     } else {
       hojaResp.appendRow([
         sello, codigo, nombre, asiste, cupo, acompanante, personas,
-        restricciones, mensaje, 0
+        menu, menuAcompanante, restricciones, mensaje, 0
       ]);
     }
 
@@ -236,15 +263,36 @@ function actualizarResumen_() {
   const resp = hoja_(CFG.HOJA_RESPUESTAS).getDataRange().getValues();
   const enc = resp.shift() || [];
   const cP = enc.indexOf('personas'), cA = enc.indexOf('asiste');
+  const cM = enc.indexOf('menu'), cMA = enc.indexOf('menu_acompanante');
   let personas = 0, si = 0, no = 0;
+  let pollo = 0, carne = 0, sinMenu = 0;
+
   for (const f of resp) {
-    if (String(f[cA]) === 'si') { personas += Number(f[cP] || 0); si++; }
-    else no++;
+    if (String(f[cA]) === 'si') {
+      const n = Number(f[cP] || 0);
+      personas += n;
+      si++;
+      // platos: se cuentan los menús válidos y el resto queda como "sin menú"
+      let contados = 0;
+      [cM, cMA].forEach(function (c) {
+        if (c < 0) return;
+        const m = String(f[c] || '').trim().toLowerCase();
+        if (m === 'pollo') { pollo++; contados++; }
+        else if (m === 'carne') { carne++; contados++; }
+      });
+      if (n > contados) sinMenu += n - contados;
+    } else no++;
   }
+
   const inv = hoja_(CFG.HOJA_INVITACIONES).getDataRange().getValues();
   inv.shift();
   const sinResponder = Math.max(0, inv.length - si - no);
   res.getRange(2, 1, 1, 5).setValues([[personas, si, no, sinResponder, si + no]]);
+
+  // conteo de platos para pasárselo al salón
+  res.getRange(1, 7, 1, 3).setValues([['Pollo (platos)', 'Carne (platos)', 'Falta elegir']]);
+  res.getRange(1, 7, 1, 3).setFontWeight('bold');
+  res.getRange(2, 7, 1, 3).setValues([[pollo, carne, sinMenu]]);
 }
 
 /** ══════════════════════════════════════════════════════════════════════
@@ -260,6 +308,23 @@ function preparar() {
   Logger.log('Invitaciones sincronizadas: ' + n);
   Logger.log('Listo. Ahora publica: Implementar ▸ Nueva implementación ▸ Aplicación web.');
   Logger.log('Ejecutar como: yo · Quién tiene acceso: cualquier persona.');
+}
+
+/** ── Migración de columnas (ejecutar UNA VEZ) ────────────────────────
+ *  Agrega las columnas "menu" y "menu_acompanante" a la hoja
+ *  Confirmaciones sin tocar las filas ya guardadas.
+ *  Seguro de ejecutar varias veces: si ya existen, no hace nada.
+ *  Se ejecuta desde el editor: función `migrarColumnas` ▸ Ejecutar.
+ *  ──────────────────────────────────────────────────────────────────── */
+function migrarColumnas() {
+  const hoja = hoja_(CFG.HOJA_RESPUESTAS);
+  const enc = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+  Logger.log('Encabezados de Confirmaciones: ' + enc.join(' | '));
+  if (enc.indexOf('menu') >= 0) {
+    Logger.log('Listo: las columnas de menú ya existen. No hay que hacer nada más.');
+  } else {
+    Logger.log('No se pudo crear la columna. Revisar que la hoja se llame "' + CFG.HOJA_RESPUESTAS + '".');
+  }
 }
 
 /** ── Configuración desde la hoja ──────────────────────────────────────
@@ -474,8 +539,8 @@ function cargarLista() {
 function probarEnvio() {
   const res = doPost({ postData: { contents: JSON.stringify({
     code: 'GW-02', nombre: 'Prueba Automática', asiste: 'si',
-    acompanante: 'Acompañante de prueba', restricciones: 'ninguna',
-    mensaje: 'mensaje de prueba', ts: Date.now() - 5000
+    acompanante: 'Acompañante de prueba', menu: 'carne', menuAcompanante: 'pollo',
+    restricciones: 'ninguna', mensaje: 'mensaje de prueba', ts: Date.now() - 5000
   }) } });
   Logger.log(res.getContent());
 }

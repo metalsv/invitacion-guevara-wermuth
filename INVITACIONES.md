@@ -29,8 +29,9 @@ poner "vamos 6" y no habría manera de saber quién tiene derecho a cuántos.
 2. **El cupo viene del servidor.** Al abrir el enlace, el sitio consulta la hoja y pinta
    "Espacio reservado: 2". Si alguien cambia el `2` por un `9` en la URL, no pasa nada:
    el cupo se vuelve a leer de la hoja al guardar (`doPost` en `apps-script.gs`).
-3. **El formulario solo pide lo que falta saber:** ¿vienes?, nombre de quien confirma y,
-   si el cupo es 2, el nombre del acompañante. Nada de "número de personas".
+3. **El formulario solo pide lo que falta saber:** ¿vienes?, nombre de quien confirma,
+   el menú (pollo o carne) y, si el cupo es 2, el nombre del acompañante **y su menú**.
+   Nada de "número de personas". Los campos de menú se ocultan si responde que no asiste.
 4. **Se puede cambiar de opinión.** Volver a entrar al mismo enlace y responder otra vez
    **actualiza** la fila (columna `actualizaciones`), no duplica.
 5. **Cierre con fecha límite.** "Te pedimos confirmar antes del 7 de noviembre" en el
@@ -40,13 +41,14 @@ poner "vamos 6" y no habría manera de saber quién tiene derecho a cuántos.
 
 ### Cómo se ve en la hoja
 
-| codigo | nombre | cupo | asiste | acompanante | personas |
-|---|---|---|---|---|---|
-| GW-01 | Ana Lucía Martínez | 1 | si | | 1 |
-| GW-02 | Familia Guevara | 2 | si | María López | 2 |
-| GW-03 | Los Hernández | 2 | no | | 0 |
+| codigo | nombre | cupo | asiste | acompanante | personas | menu | menu_acompanante |
+|---|---|---|---|---|---|---|---|
+| GW-01 | Ana Lucía Martínez | 1 | si | | 1 | carne | |
+| GW-02 | Familia Guevara | 2 | si | María López | 2 | pollo | carne |
+| GW-03 | Los Hernández | 2 | no | | 0 | | |
 
-`personas` lo calcula el script: es el número que se le pasa al salón.
+`personas` lo calcula el script: es el número que se le pasa al salón. El conteo de
+platos por menú aparece en la pestaña `Resumen` (pollo, carne y cuántos faltan elegir).
 
 ## Casos borde y qué hacer
 

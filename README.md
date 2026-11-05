@@ -14,6 +14,7 @@
 - ✅ Diseño, formulario y publicación funcionando.
 - ✅ Dominio propio con HTTPS y certificado válido.
 - ✅ Backend en Google Sheets probado de extremo a extremo.
+- ✅ **Elección de menú (pollo o carne) al confirmar** — invitado y acompañante.
 - 🕓 **Entregado al cliente para su revisión.**
 - ⏳ Pendiente: lista real de invitados y pegar la versión final del
   `apps-script.gs` en la hoja (trae `Config`, `empezarDeCero` y el dominio nuevo).
@@ -141,6 +142,7 @@ Cualquier hosting estático sirve porque no hay backend propio:
 | Quiero cambiar… | Archivo |
 |---|---|
 | Textos de la invitación (nombres, fecha, lugar, hora) | `index.html` |
+| Opciones de menú (pollo / carne) | `index.html` (bloques `name="menu"` y `name="menuAcompanante"`) |
 | Fecha/hora del evento para el calendario y el mapa | `assets/js/config.js` → `evento` |
 | URL del backend | `assets/js/config.js` → `endpoint` |
 | Fecha límite de confirmación | `index.html` (bloque `.panel__deadline`) |

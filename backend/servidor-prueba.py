@@ -116,6 +116,14 @@ class Manejador(SimpleHTTPRequestHandler):
         asiste = p.get("asiste") == "si"
         acomp = limpiar(p.get("acompanante"), 80) if cupo == 2 else ""
 
+        def menu_valido(v):
+            v = str(v or "").strip().lower()
+            return v if v in ("pollo", "carne") else ""
+
+        # Si el cliente no manda el menú (caché vieja), queda vacío: no se inventa
+        menu = menu_valido(p.get("menu")) if asiste else ""
+        menu_acomp = menu_valido(p.get("menuAcompanante")) if (asiste and acomp) else ""
+
         reg = cargar()
         previo = codigo in reg and codigo != ""
         reg[codigo or nombre] = {
@@ -126,6 +134,8 @@ class Manejador(SimpleHTTPRequestHandler):
             "cupo": cupo,
             "acompanante": acomp,
             "personas": (2 if acomp else 1) if asiste else 0,
+            "menu": menu,
+            "menu_acompanante": menu_acomp,
             "restricciones": limpiar(p.get("restricciones"), 140),
             "mensaje": limpiar(p.get("mensaje"), 400),
             "actualizaciones": reg.get(codigo, {}).get("actualizaciones", 0) + (1 if previo else 0),
